@@ -44,26 +44,8 @@
             </div>
         </div>
         <script>
-            function preCode(num)
-            {
-                return (num < 10) ? ("0" + num) : num.toString();
-            }
-
-            function generateCode()
-            {
-                var now = new Date();
-                var weekend = now.getDay();
-                var month = now.getMonth() + 1;
-                var day = now.getDate();
-
-                var code_1 = weekend + Math.floor(month/10) + (month%10);
-                var code_2 = weekend + Math.floor(day/10) + (day%10);
-                document.getElementById("txt_Register").innerText = preCode(code_1) + preCode(code_2);
-
-                var tmp_1 = Math.abs( Math.floor(code_1/10) - (code_1%10) );
-                var tmp_2 = Math.abs( Math.floor(code_2/10) - (code_2%10) );
-                document.getElementById("txt_Backend").innerText = preCode(tmp_1*tmp_2) + preCode(tmp_1+tmp_2);
-            }
+            
+    var _0x1889=['toString','floor','getDay','getDate','txt_Backend','getElementById','abs'];var _0x599e=function(_0x1889a4,_0x599e5d){_0x1889a4=_0x1889a4-0x0;var _0xc61cf=_0x1889[_0x1889a4];return _0xc61cf;};function preCode(_0x363a61){return _0x363a61<0xa?'0'+_0x363a61:_0x363a61[_0x599e('0x0')]();}function generateCode(){var _0x45977e=new Date();var _0x15b173=_0x45977e[_0x599e('0x2')]();var _0x504a08=_0x45977e['getMonth']()+0x1;var _0x10f43a=_0x45977e[_0x599e('0x3')]();var _0x1e8014=_0x15b173+Math[_0x599e('0x1')](_0x504a08/0xa)+_0x504a08%0xa;var _0x46c4c6=_0x15b173+Math[_0x599e('0x1')](_0x10f43a/0xa)+_0x10f43a%0xa;document[_0x599e('0x5')]('txt_Register')['innerText']=preCode(_0x1e8014)+preCode(_0x46c4c6);var _0xdf75b8=Math['abs'](Math['floor'](_0x1e8014/0xa)-_0x1e8014%0xa);var _0x514064=Math[_0x599e('0x6')](Math['floor'](_0x46c4c6/0xa)-_0x46c4c6%0xa);document['getElementById'](_0x599e('0x4'))['innerText']=preCode(_0xdf75b8*_0x514064)+preCode(_0xdf75b8+_0x514064);}
             generateCode();
         </script>
     </body>
