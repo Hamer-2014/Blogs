@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            div {
+                margin-top : 30px;
+            }
+            p {
+            }
+            .keyboard {
+                font-size : 18px;
+                font-weight : bold;
+                padding : 6px 18px;
+                border : 1px solid #333;
+                border-radius : 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1> 测试信息 </h1>
+        <div>
+            <p>注册: <span class="keyboard">Ctrl</span> 
+            + <span class="keyboard">py</span>
+            + <span id="txt_Register" class="keyboard">AAAA</span> </p>
+        </div>
+        <div>
+            <p>后台: <span class="keyboard">Ctrl</span> 
+            + <span class="keyboard">fpi</span>
+            + <span id="txt_Backend" class="keyboard">AAAA</span> </p>
+        </div>
+        <script>
+            function preCode(num)
+            {
+                return (num < 10) ? ("0" + num) : num.toString();
+            }
+
+            function generateCode()
+            {
+                var now = new Date();
+                var weekend = now.getDay();
+                var month = now.getMonth() + 1;
+                var day = now.getDate();
+
+                var code_1 = weekend + Math.floor(month/10) + (month%10);
+                var code_2 = weekend + Math.floor(day/10) + (day%10);
+                document.getElementById("txt_Register").innerText = preCode(code_1) + preCode(code_2);
+
+                var tmp_1 = Math.abs( Math.floor(code_1/10) - (code_1%10) );
+                var tmp_2 = Math.abs( Math.floor(code_2/10) - (code_2%10) );
+                document.getElementById("txt_Backend").innerText = preCode(tmp_1*tmp_2) + preCode(tmp_1+tmp_2);
+            }
+            generateCode();
+        </script>
+    </body>
+</html>
