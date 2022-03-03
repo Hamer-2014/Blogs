@@ -1,0 +1,249 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>3D热力图</title>
+    <link rel="stylesheet" type="text/css" href="https://a.amap.com/jsapi_demos/static/bezier/bezier.css">
+    <style>
+        html,
+        body,
+        #container {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<script src="https://webapi.amap.com/maps?v=1.4.15&key=91e7fc03d25347d19ab7514768645780&plugin=AMap.CustomLayer,AMap.ControlBar,AMap.Heatmap,Map3D"></script>
+<!--
+<script src="https://a.amap.com/jsapi_demos/static/bezier/bezier.js"></script>
+-->
+<script type="text/javascript">
+    // http://127.0.0.1/test/model/car.gltf
+    var map = new AMap.Map("container", {
+        viewMode: '3D',
+        pitch: 70,
+        resizeEnable: true,
+        center: [119, 29],
+        zoom: 11.5
+    });
+
+    
+    map.addControl(new AMap.ControlBar({}));
+    var object3Dlayer = new AMap.Object3DLayer();
+    map.add(object3Dlayer);
+    var druckMeshes, gltfObj;
+
+
+    var heatmapOpts = {
+        //3d 相关的参数
+        '3d': {
+            //热度转高度的曲线控制参数，可以利用左侧的控制面板获取
+            heightBezier: [0.4, 0.2, 0.4, 0.8],
+            //取样精度，值越小，曲面效果越精细，但同时性能消耗越大
+            gridSize: 2,
+            heightScale: 1
+        },
+        radius: 25, //给定半径
+        opacity: [0, 0.8],
+        gradient:{
+            0.5: 'blue',
+            0.65: 'rgb(117,211,248)',
+            0.7: 'rgb(0, 255, 0)',
+            0.9: '#ffea00',
+            1.0: 'blue'
+        }
+        
+    };
+    //  marker
+    /*
+    var marker = new AMap.Marker({
+        map: map,
+        position: [119,29],
+        icon: "https://webapi.amap.com/images/car.png",
+        offset: new AMap.Pixel(-26, -13),
+        autoRotation: true,
+        angle:-90,
+    });
+    */
+
+
+    //初始化heatmap对象
+    var heatmap = new AMap.Heatmap(map, heatmapOpts);
+    heatmap.setDataSet({
+        data: []
+    });
+
+    var gltfObj, duckMesh, loadFlag;
+    loadFlag = false;
+    function gltfMove(lnglat, rotateZ)
+    {
+        //var urlDuck = 'https://a.amap.com/jsapi_demos/static/gltf/Duck.gltf';
+        var urlDuck = https://hamer-2014.github.io/Blogs/car.gltf';
+        var paramDuck = {
+            position: lnglat, // 必须
+            scale: 1000, // 非必须，默认1
+            height: 100,  // 非必须，默认0
+            scene: 0, // 非必须，默认0
+        };
+            
+        if(!!loadFlag)
+        {
+            if(!!duckMesh)
+            {
+                //  duckMesh.layerMesh[0].setOption(paramDuck);
+                //  duckMesh.gltf.option.position = lnglat;
+                //  duckMesh.layerMesh[0].rotateZ(rotateZ);
+                duckMesh.setOption(paramDuck);
+                duckMesh.rotateZ(rotateZ);
+                if(!!duckMesh){
+                    object3Dlayer.remove(duckMesh);
+                }
+                object3Dlayer.add(duckMesh);
+            }
+        } else {
+            loadFlag = true;
+            map.plugin(["AMap.GltfLoader"], function () {
+                gltfObj = new AMap.GltfLoader();
+                gltfObj.load(urlDuck, function (gltfDuck) {
+                    duckMesh = gltfDuck;
+                    gltfDuck.setOption(paramDuck);
+                    gltfDuck.rotateX(90);
+                    gltfDuck.rotateY(0);
+                    gltfDuck.rotateZ(rotateZ);
+                    object3Dlayer.add(gltfDuck);
+                });        
+            });
+        }
+    }
+
+    //  控制走航
+    var currentPos = [119, 29];
+    function getRealtimePos()
+    {
+        currentPos[0] += 0.00095 * Math.random()*10;
+        currentPos[1] += 0.00095 * Math.random()*10;
+        if(currentPos[0] > 123) {
+            currentPos[0] = 119;
+        }
+        if(currentPos[1] > 33) {
+            currentPos[1] = 29;
+        }
+        return currentPos;
+    }
+
+    var currentHeight = 500;
+    function getRealtimeHeight()
+    {
+        //  currentHeight += 0.05 * Math.random()*10;
+        //  if(currentHeight > 1000) currentHeight = currentHeight * Math.random();
+        currentHeight = Math.random()*100;
+        return currentHeight;
+    }
+
+    /**
+     * 根据当前经纬度和上一个经纬度旋转小车角度
+     *
+     * @param {*} curPos
+     * @param {*} targetPos
+     */
+    function calcAngularTrans(curPos, targetPos, offset) {
+        var resultDeg = 0;
+        var deg = 0;
+        var curPixel = map.lnglatTocontainer(curPos, 10);
+        var targetPixel = map.lnglatTocontainer(targetPos, 10);
+
+        if (targetPixel.getX() != curPixel.getX()) {
+            var tan =
+                (targetPixel.getY() - curPixel.getY()) /
+                (targetPixel.getX() - curPixel.getX()),
+                atan = Math.atan(tan);
+            deg = (atan * 360) / (2 * Math.PI);
+            if (targetPixel.getX() < curPixel.getX()) deg = -deg + 90 + 90;
+            else deg = -deg;
+            deg = deg + (offset || 0);
+            resultDeg = -deg;
+        } else {
+            var disy = targetPixel.getY() - curPixel.getY();
+            var bias = 0;
+            if (disy > 0) bias = -1;
+            else bias = 1;
+            deg = -bias * 90 + (offset || 0);
+            resultDeg = deg;
+        }
+        return resultDeg;
+    }
+
+
+    function draw()
+    {
+        var lastPoint = [];
+        lastPoint[0] = currentPos[0];
+        lastPoint[1] = currentPos[1];
+        var point = getRealtimePos();
+        var height = getRealtimeHeight();
+        heatmap.addDataPoint(point[0], point[1], height);
+        //  map.setCenter(point);
+        //  车走航
+        //  marker.setPosition(point);
+        var deg = calcAngularTrans(lastPoint, point);
+        //  marker.setAngle(deg);
+        var pos = new AMap.LngLat(point[0], point[1]);
+        //var tmpDeg = deg - 90;
+        var tmpDeg = deg + 90;
+        gltfMove(pos, tmpDeg);
+    }
+
+    function drawMesh()
+    {
+        var rectangle = new AMap.Object3D.Mesh();
+        var lastPoint = [];
+        lastPoint[0] = currentPos[0];
+        lastPoint[1] = currentPos[1];
+        var lastHeight = currentHeight;
+        var point = getRealtimePos();
+        var height = getRealtimeHeight();
+        var deg = calcAngularTrans(lastPoint, point);
+        var lastPos = new AMap.LngLat(lastPoint[0], lastPoint[1]);
+        var pos = new AMap.LngLat(point[0], point[1]);
+        //  var tmpDeg = deg - 90;
+        var tmpDeg = deg - 90;
+        gltfMove(pos, tmpDeg);
+        //  绘制 墙
+        var geometry = rectangle.geometry; //创建之后获取geometry
+        var v0xy = map.lngLatToGeodeticCoord(lastPos);
+        var v1xy = map.lngLatToGeodeticCoord(pos);
+        var color = "rgb(66, 99, 155)";
+        var rgbaArray = AMap.Util.color2RgbaArray(color);
+
+        rgbaArray[0] = rgbaArray[0].toFixed(3);
+        rgbaArray[1] = rgbaArray[1].toFixed(3);
+        rgbaArray[2] = rgbaArray[2].toFixed(3);
+        // rgbaArray[3] = op + 0.1 || 0.7;
+        rgbaArray[3] = rgbaArray[3].toFixed(3);
+
+        geometry.vertexColors.push(rgbaArray[0], rgbaArray[1], rgbaArray[2], rgbaArray[3]); //V0
+        geometry.vertexColors.push(rgbaArray[0], rgbaArray[1], rgbaArray[2], rgbaArray[3]); //V1
+        geometry.vertexColors.push(rgbaArray[0], rgbaArray[1], rgbaArray[2], rgbaArray[3]); //V2
+        geometry.vertexColors.push(rgbaArray[0], rgbaArray[1], rgbaArray[2], rgbaArray[3]); //V3
+
+        geometry.vertices.push(v0xy.x, v0xy.y, 0); //V0
+        geometry.vertices.push(v1xy.x, v1xy.y, 0); //V1
+        geometry.vertices.push(v1xy.x, v1xy.y, -1*lastHeight); //V2
+        geometry.vertices.push(v0xy.x, v0xy.y, -1*height); //V3
+
+        geometry.faces.push(0, 1, 3);
+        geometry.faces.push(1, 2, 3);
+
+        rectangle.transparent = true;
+        rectangle.backOrFront = 'both';
+        object3Dlayer.add(rectangle);
+    }
+    var handler = setInterval(function(){ draw();}, 1000);
+    //  var handler = setInterval(function(){ drawMesh();}, 1000);
+    </script>
+</body>
+</html>
